@@ -1,9 +1,0 @@
-i a b
-i b c
-i a e
-i b f
-i d e
-q b c
-q b e
-q b a
-q a b
