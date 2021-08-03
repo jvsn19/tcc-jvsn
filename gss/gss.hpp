@@ -13,6 +13,7 @@ class GSS {
 
     public:
         GSS(int rows, int cols, int (*hashFunction)(string), int (*fingerprintFunction)(string));
+        ~GSS();
         void insertEdge(pss edge);
         bool queryEdge(pss edge);
         bool queryVertex(string vertex);

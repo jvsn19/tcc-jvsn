@@ -40,3 +40,10 @@ int GSS::test(string s) {
     }
     return this->hashFunction(s);
 }
+
+GSS::~GSS() {
+    for(int i = 0; i < rows; ++i) {
+        delete[] adjMatrix[i];
+    }
+    delete[] adjMatrix;
+}
