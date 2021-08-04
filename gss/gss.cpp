@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cmath>
 #define mp make_pair
+#define mt make_tuple
 
 using namespace std;
 
@@ -12,9 +13,9 @@ GSS::GSS(
     int F,
     int (*hashFunction)(string))
     :M(M), m(m), F(F), hashFunction(hashFunction) {
-    adjMatrix = new edge*[m];
+    adjMatrix = new matrixEdge*[m];
     for (int i = 0; i < m; ++i) {
-        adjMatrix[i] = new edge[m];
+        adjMatrix[i] = new matrixEdge[m];
         for(int j = 0; j < m; ++j) {
             adjMatrix[i][j] = mp(mp(-1, -1), -1);
         }
@@ -30,45 +31,53 @@ GSS::~GSS() {
     delete hashToVertex;
 }
 
-void GSS::insertEdge(pss edge) {
-    int hashS = hashFunction(edge.first), 
-        hashD = hashFunction(edge.second);
-    int fpS = fingerprintFunction(hashS),
-        fpD = fingerprintFunction(hashD);
-    if (adjMatrix[hashS][hashD].second != -1 && (mp(fpS, fpD) != adjMatrix[hashS][hashD].first)) {
-        adjList[hashS].push_back(mp(hashD, 1));
+void GSS::insertEdge(inputEdge edge) {
+    int hashS, hashD, addrS, addrD, fpS, fpD;
+    tie(hashS, hashD, addrS, addrD, fpS, fpD) = getAddrFp(get<0>(edge));
+    if (adjMatrix[addrS][addrD].second != -1) {
+        if((mp(fpS, fpD) != adjMatrix[addrS][addrD].first)) {
+            adjList[hashS].push_back(mp(hashD, 1));
+        }
+        else {
+            adjMatrix[addrS][addrD].second += 1;
+        }
     } else {
-        adjMatrix[hashS][hashD] = mp(mp(fpS, fpD), 1);
+        adjMatrix[addrS][addrD] = mp(mp(fpS, fpD), 1);
     }
 }
 
-bool GSS::queryEdge(pss edge) {
-    int hashS = hashFunction(edge.first),
-        hashD = hashFunction(edge.second);
-    return adjMatrix[hashS][hashD].second != -1;
+int GSS::queryEdge(pairEdge edge) {
+    int hashS, hashD, addrS, addrD, fpS, fpD;
+    tie(hashS, hashD, addrS, addrD, fpS, fpD) = getAddrFp(edge);
+    if(adjMatrix[addrS][addrD].first == mp(fpS, fpD)) {
+        return adjMatrix[addrS][addrD].second;
+    }
+    for(bufferPair buffer: adjList[hashS]) {
+        if(buffer.first == hashD) {
+            return buffer.second;
+        }
+    }
+    return -1;
 }
 
 bool GSS::queryVertex(string vertex) {
     return hashToVertex->find(vertex) != hashToVertex->end();
 }
 
-int GSS::addressFunction(int vertex) {
-    return ceil(vertex / M);
+int GSS::addrFunction(int vertex) {
+    return floor(vertex / F);
 }
 
-int GSS::fingerprintFunction(int vertex) {
+int GSS::fpFunction(int vertex) {
     return vertex % F;
 }
 
-int GSS::test(string s) {
-    if (hashFunction == nullptr) {
-        return -1;
-    }
-    for(int i = 0; i < m; ++i) {
-        for (int j = 0; j < m; ++j) {
-            cout << adjMatrix[i][j].second;
-        }
-        cout << endl;
-    }
-    return hashFunction(s);
+hashAddrFp GSS::getAddrFp(pairEdge edge) {
+    int hashS = hashFunction(get<0>(edge)), 
+        hashD = hashFunction(get<1>(edge));
+    int addrS = addrFunction(hashS),
+        addrD = addrFunction(hashD);
+    int fpS = fpFunction(hashS),
+        fpD = fpFunction(hashD);
+    return {hashS, hashD, addrS, addrD, fpS, fpD};
 }
