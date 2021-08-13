@@ -5,22 +5,23 @@
 #include <tuple>
 
 using namespace std;
+typedef long long ll;
 
 template <class T> class GSS {
-    int (*hashFunction)(T);
-    int M, m, F;
-    map<string, int>* hashToVertex;
-    pair<pair<int, int>, int>** adjMatrix;
-    vector<vector<pair<int, int>>> adjList;
+    ll (*hashFunction)(T);
+    ll M, m, F;
+    map<string, ll>* hashToVertex;
+    pair<pair<ll, ll>, ll>** adjMatrix;
+    vector<vector<pair<ll, ll>>> adjList;
 
-    int addrFunction(int vertex);
-    int fpFunction(int vertex);
-    tuple<int, int, int, int, int, int> getAddrFp(pair<T, T> edge);
+    ll addrFunction(ll vertex);
+    ll fpFunction(ll vertex);
+    tuple<ll, ll, ll, ll, ll, ll> getAddrFp(pair<T, T> edge);
 
     public:
-        GSS(int M, int m, int F, int (*hashFunction)(T));
+        GSS(ll M, ll m, ll F, ll (*hashFunction)(T));
         ~GSS(); 
-        void insertEdge(tuple<pair<T, T>, int> edge);
-        int queryEdge(pair<T, T> edge);
+        void insertEdge(tuple<pair<T, T>, ll> edge);
+        ll queryEdge(pair<T, T> edge);
         bool queryVertex(string vertex);
 };

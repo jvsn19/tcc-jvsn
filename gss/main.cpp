@@ -1,51 +1,50 @@
-#define GSS_M 100000
-#define GSS_m 1000
-#define GSS_F 100
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <chrono>
+#include <cstdio>
 
 #include "gss.cpp"
 #include "globals.hpp"
 
-// Pass those values as arguments
-int prime = 37;
+const ll GSS_M = 31000;
+const ll GSS_m = 1000;
+const ll GSS_F = 31;
+const ll PRIME = 13;
 
-int pow(int base, int expo, int limit = GSS_M) {
-    int result = 1;
+ll pow(ll base, ll expo) {
+    ll result = 1;
     while(expo) {
         if (expo & 1) {
-            result = (result*base) % limit; 
+            result = (result*base) % GSS_M; 
         }
-        base = (base*base % limit);
+        base = (base*base % GSS_M);
         expo >>= 1;
     }
     return result;
 }
 
-int hashFunction(string s) {
-    int hashValue = 0;
-    for (int idx = 0; idx < s.size(); ++idx) {
-        hashValue = (s[idx] * (idx + 1) * prime) % GSS_M;
+ll hashFunction(string s) {
+    ll hashValue = 0;
+    for (ll idx = 0; idx < s.size(); ++idx) {
+        hashValue = (s[idx] * (idx + 1) * PRIME) % GSS_M;
     }
     return hashValue % GSS_M;
 }
 
-int hashFunction(int v) {
-    int hashValue = 0, idx = 1;
+ll hashFunction(ll v) {
+    ll hashValue = 0, idx = 1;
     while(v) {
-        hashValue = (v % 10 * idx * prime) % GSS_M;
+        hashValue = pow(PRIME, (v % 10) * idx) % GSS_M;
         v /= 10;
     }
     return hashValue % GSS_M;
 }
 
 void run(string filePath) {
-    GSS<int>* gss = new GSS<int>(GSS_M, GSS_m, GSS_F, hashFunction);
+    GSS<ll>* gss = new GSS<ll>(GSS_M, GSS_m, GSS_F, hashFunction);
     std::ifstream file(filePath);
-    int origin, destiny;
+    ll origin, destiny;
     collisions = 0;
     string line;
     auto start = chrono::high_resolution_clock::now();
@@ -62,13 +61,14 @@ void run(string filePath) {
     cout << "Duration: " << chrono::duration_cast<chrono::microseconds>(stop - start).count() << endl;
     cout << "Size: " << sizeof(gss) << endl; 
     cout << "Collisions: " << collisions << endl; 
+    cout << endl;
     file.close();
     delete gss;
 }
 
 int main(int argc, char **argv) {
     run("datasets/Email-EuAll.txt");
-    cout << endl;
     run("datasets/Cit-HepPh.txt");
+    run("datasets/web-NotreDame.txt");
     return 0;
 }

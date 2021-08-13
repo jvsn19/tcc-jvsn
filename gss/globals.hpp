@@ -1,1 +1,1 @@
-extern int collisions;
+extern long long collisions;
