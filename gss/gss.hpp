@@ -6,28 +6,21 @@
 
 using namespace std;
 
-typedef pair<string, string> pairEdge;
-typedef tuple<pairEdge, int> inputEdge;
-typedef pair<int, int> fingerprintPair;
-typedef pair<fingerprintPair, int> matrixEdge;
-typedef pair<int, int> bufferPair;
-typedef tuple<int, int, int, int, int, int> hashAddrFp;
-
-class GSS {
-    int (*hashFunction)(string);
+template <class T> class GSS {
+    int (*hashFunction)(T);
     int M, m, F;
     map<string, int>* hashToVertex;
-    matrixEdge** adjMatrix;
-    vector<vector<bufferPair>> adjList;
+    pair<pair<int, int>, int>** adjMatrix;
+    vector<vector<pair<int, int>>> adjList;
 
     int addrFunction(int vertex);
     int fpFunction(int vertex);
-    hashAddrFp getAddrFp(pairEdge edge);
+    tuple<int, int, int, int, int, int> getAddrFp(pair<T, T> edge);
 
     public:
-        GSS(int M, int m, int F, int (*hashFunction)(string));
+        GSS(int M, int m, int F, int (*hashFunction)(T));
         ~GSS(); 
-        void insertEdge(inputEdge edge);
-        int queryEdge(pairEdge edge);
+        void insertEdge(tuple<pair<T, T>, int> edge);
+        int queryEdge(pair<T, T> edge);
         bool queryVertex(string vertex);
 };
