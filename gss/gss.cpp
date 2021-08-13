@@ -2,8 +2,10 @@
 #include <string>
 #include <iostream>
 #include <cmath>
-#define make_pair make_pair
-#define make_tuple make_tuple
+
+#include "globals.hpp"
+
+int collisions;
 
 using namespace std;
 
@@ -37,6 +39,7 @@ template <class T> void GSS<T>::insertEdge(tuple<pair<T, T>, int> edge) {
     if (adjMatrix[addrS][addrD].second != -1) {
         if((make_pair(fpS, fpD) != adjMatrix[addrS][addrD].first)) {
             adjList[hashS].push_back(make_pair(hashD, 1));
+            ++collisions;
         }
         else {
             adjMatrix[addrS][addrD].second += 1;
@@ -51,6 +54,7 @@ template <class T> int GSS<T>::queryEdge(pair<T, T> edge) {
     tie(hashS, hashD, addrS, addrD, fpS, fpD) = getAddrFp(edge);
     if(adjMatrix[addrS][addrD].first == make_pair(fpS, fpD)) {
         return adjMatrix[addrS][addrD].second;
+        ++collisions;
     }
     for(pair<int, int> buffer: adjList[hashS]) {
         if(buffer.first == hashD) {
