@@ -2,3 +2,4 @@
 test*
 datasets
 main$
+*.ignoreme
