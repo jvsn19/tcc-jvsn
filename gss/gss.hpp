@@ -4,24 +4,40 @@
 #include <utility>
 #include <tuple>
 
+#include "graph/Graph.cpp"
+#include "LinkedList.cpp"
+
 using namespace std;
 typedef long long ll;
 
 template <class T> class GSS {
+private:
     ll (*hashFunction)(T);
-    ll M, m, F;
+    ll M, graphSize;
+    int fpBitSize, sqHashAttmp, timer, prime, modulePrime, candidateBuckets, numRooms, leftoversCount;
+    Graph* graph;
     map<string, ll>* hashToVertex;
-    pair<pair<ll, ll>, ll>** adjMatrix;
-    vector<vector<pair<ll, ll>>> adjList;
+    map<ll, int> addrSToLeftovers;
+    vector<LinkedList*> leftovers;
 
-    ll addrFunction(ll vertex);
-    ll fpFunction(ll vertex);
     tuple<ll, ll, ll, ll, ll, ll> getAddrFp(pair<T, T> edge);
+    tuple<vector<int>, vector<int>> calculateSquareHashArray(ll fpS, ll fpD);
 
-    public:
-        GSS(ll M, ll m, ll F, ll (*hashFunction)(T));
-        ~GSS(); 
-        void insertEdge(tuple<pair<T, T>, ll> edge);
-        ll queryEdge(pair<T, T> edge);
-        bool queryVertex(string vertex);
+public:
+    GSS(
+        ll M, 
+        ll graphSize, 
+        int fpBitSize, 
+        int sqHashAttmp,
+        int timer,
+        int prime,
+        int modulePrime,
+        int candidateBuckets,
+        int numRooms,
+        ll (*hashFunction)(T)
+    );
+    ~GSS(); 
+    void insertEdge(tuple<pair<T, T>, ll> edge);
+    ll queryEdge(pair<T, T> edge);
+    bool queryVertex(string vertex);
 };

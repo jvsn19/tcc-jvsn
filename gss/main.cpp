@@ -4,15 +4,19 @@
 #include <chrono>
 #include <cstdio>
 #include<sys/resource.h>
-#include "hashfunctions.h"
+#include "helper/hashfunctions.h"
 #include "gss.cpp"
 #include "globals.hpp"
 
 const ll GSS_M = 31000;
-const ll GSS_m = 1000;
-const ll GSS_F = 31;
-const ll PRIME = 13;
-
+const ll GSS_ADJ_MATRIX_SIZE = 1000;
+const ll GSS_FP_BIT_SIZE = 31;
+const int SQUARE_HASHING_ATTEMPTS = 5;
+const int TIMER = 5;
+const int PRIME = 739;
+const int MODULE_PRIME = 1048576;
+const int CANDIDATE_BUCKETS = 5;
+const int NUM_ROOMS = 4;
 ll hashFunction(string s) {
     ll hashValue = 0;
     for (ll idx = 0; idx < s.size(); ++idx) {
@@ -21,23 +25,22 @@ ll hashFunction(string s) {
     return hashValue % GSS_M;
 }
 
-ll hashFunction(ll v) {
-    ll hashValue = 0, idx = 1;
-    while(v) {
-        hashValue = pow(PRIME, (v % 10) * idx) % GSS_M;
-        v /= 10;
-    }
-    return hashValue % GSS_M;
-}
-
 void run(string filePath) {
-    GSS<ll>* gss = new GSS<ll>(GSS_M, GSS_m, GSS_F, hashFunction);
+    GSS<string>* gss = new GSS<string>(
+        GSS_M, 
+        GSS_ADJ_MATRIX_SIZE, 
+        GSS_FP_BIT_SIZE, 
+        SQUARE_HASHING_ATTEMPTS,
+        TIMER,
+        PRIME,
+        MODULE_PRIME,
+        CANDIDATE_BUCKETS,
+        NUM_ROOMS,
+        hashFunction);
     std::ifstream file(filePath);
-    ll origin, destiny;
+    string origin, destiny;
     string line;
-    auto start = chrono::high_resolution_clock::now();
     while (getline(file, line)) {
-        // Remove comments
         if(line[0] == '#') {
             continue;
         }
@@ -45,15 +48,13 @@ void run(string filePath) {
         ss >> origin >> destiny;
         gss->insertEdge(make_tuple(make_pair(origin, destiny), 1));
     }
-    
-    cout << endl;
     file.close();
     delete gss;
 }
 
 int main(int argc, char **argv) {
-    run("datasets/Email-EuAll.txt");
-    run("datasets/Cit-HepPh.txt");
-    run("datasets/web-NotreDame.txt");
+    run("../datasets/Email-EuAll.txt");
+    // run("datasets/Cit-HepPh.txt");
+    // run("datasets/web-NotreDame.txt");
     return 0;
 }
