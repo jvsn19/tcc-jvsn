@@ -10,7 +10,7 @@
 #include "globals.hpp"
 
 const ll GSS_M = 2;
-const ll GRAPH_SIZE = 5000;
+const ll GRAPH_SIZE = 6000;
 const ll GSS_FP_BIT_SIZE = 12;
 const int SQUARE_HASHING_ATTEMPTS = 15;
 const int TIMER = 5;
@@ -56,16 +56,20 @@ void run(string filePath) {
     file.close();
     string s, d;
     int errors = 0;
+    startTime = chrono::system_clock::now();
     for (pair<string, string> edge: edges) {
         string s = edge.first, d = edge.second;
         if(gss->queryEdge(make_pair(s, d)) == -1) {
             errors++;
         }
     }
+    endTime = chrono::system_clock::now();
+    std::chrono::duration<double> deltaQuery = endTime - startTime;
     cout << "Test Result - " << filePath << ":" << endl; 
     cout << "Going to Leftovers: " << collisions << endl;
     cout << "Precision: " << 1.0 - ((double) errors / (double) edges.size()) << endl;
-    cout << "Duration to build GSS: " << delta.count() << endl << endl;
+    cout << "Duration to build GSS: " << delta.count() << endl;
+    cout << "Duration to query all edges: " << deltaQuery.count() << endl << endl;
     delete gss;
 }
 
