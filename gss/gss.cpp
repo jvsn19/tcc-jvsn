@@ -38,7 +38,7 @@ template <class T> GSS<T>::~GSS() {
     delete graph;
     delete hashToVertex;
     for(LinkedList *node: leftovers) {
-        delete leftovers;
+        delete node;
     }
 }
 
@@ -57,7 +57,7 @@ template <class T> void GSS<T>::insertEdge(tuple<pair<T, T>, ll> edge) {
         int indexS = index / sqHashAttmp,
             indexD = index % sqHashAttmp;
         int posS = (addrS + sqHashArrS[indexS]) % graphSize,
-            posD = (addrD + sqHashArrD[indexS]) % graphSize;
+            posD = (addrD + sqHashArrD[indexD]) % graphSize;
         /*
         Instead of using a matrix itself we can have a vector of size equals to matrix_cols * matrix_row and
         for a position x, y, the new coordinate is row * matrix_rows + y. In our case, matrix_row = matrix_col = 
@@ -75,11 +75,13 @@ template <class T> void GSS<T>::insertEdge(tuple<pair<T, T>, ll> edge) {
         */
         for (int roomShift = 0; roomShift < numRooms; roomShift++) {
             Slot * slot = graph->getSlot(pos);
+            // cout << slot->getIndex() << " " << slot->getWeigth(roomShift) << " " << roomShift << endl;
             if(
                 ((slot->getIndex() >> (roomShift << 3)) & ((1 << 8) - 1)) == (indexS + (indexD << 4)) &&
                 (slot->getFP(roomShift).first == fpS) &&
                 (slot->getFP(roomShift).second == fpD)
             ) {
+                // cout << get<0>(edge).first << " " << get<0>(edge).second << endl;
                 slot->addWeigth(roomShift, slot->getWeigth(roomShift) + weigth);
                 return;
             }
@@ -90,6 +92,7 @@ template <class T> void GSS<T>::insertEdge(tuple<pair<T, T>, ll> edge) {
                 return;
             }
         }
+        collisions += 1;
         /* 
         If reaches here, all the possibilities for this new edge are occupied. Should add it into leftovers array
         To do so, first we need to check if there is a linked list to the given addrS. If it is

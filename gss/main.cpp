@@ -9,26 +9,25 @@
 #include "globals.hpp"
 
 const ll GSS_M = 31000;
-const ll GSS_ADJ_MATRIX_SIZE = 1000;
-const ll GSS_FP_BIT_SIZE = 31;
-const int SQUARE_HASHING_ATTEMPTS = 5;
+const ll GRAPH_SIZE = 1000;
+const ll GSS_FP_BIT_SIZE = 12;
+const int SQUARE_HASHING_ATTEMPTS = 15;
 const int TIMER = 5;
 const int PRIME = 739;
 const int MODULE_PRIME = 1048576;
 const int CANDIDATE_BUCKETS = 5;
 const int NUM_ROOMS = 4;
 ll hashFunction(string s) {
-    ll hashValue = 0;
-    for (ll idx = 0; idx < s.size(); ++idx) {
-        hashValue = (s[idx] * (idx + 1) * PRIME) % GSS_M;
-    }
-    return hashValue % GSS_M;
+    ll first = BOB3((unsigned char*)s.c_str(), s.size());
+    ll second = BOB2((unsigned char*)s.c_str(), s.size());
+    return (first << 31) + second;
 }
 
 void run(string filePath) {
+    collisions = 0;
     GSS<string>* gss = new GSS<string>(
         GSS_M, 
-        GSS_ADJ_MATRIX_SIZE, 
+        GRAPH_SIZE, 
         GSS_FP_BIT_SIZE, 
         SQUARE_HASHING_ATTEMPTS,
         TIMER,
@@ -49,12 +48,14 @@ void run(string filePath) {
         gss->insertEdge(make_tuple(make_pair(origin, destiny), 1));
     }
     file.close();
+    cout << collisions << endl;
     delete gss;
 }
 
 int main(int argc, char **argv) {
+    // run("../datasets/test");
     run("../datasets/Email-EuAll.txt");
-    // run("datasets/Cit-HepPh.txt");
-    // run("datasets/web-NotreDame.txt");
+    run("../datasets/Cit-HepPh.txt");
+    run("../datasets/web-NotreDame.txt");
     return 0;
 }

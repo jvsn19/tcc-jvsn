@@ -10,6 +10,7 @@ private:
     vector<int> weigths;
     
 public:
+    Slot();
     Slot(int numRooms);
     pair<int, int> getFP(int room);
     int getIndex();

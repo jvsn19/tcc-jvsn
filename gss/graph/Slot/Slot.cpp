@@ -1,5 +1,7 @@
 #include "Slot.hpp"
 
+Slot::Slot() {}
+
 Slot::Slot(int numRooms){
     index = 0;
     fingerprints = vector<pair<int, int>>(numRooms, {0,0});
