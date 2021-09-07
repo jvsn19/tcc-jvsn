@@ -22,6 +22,7 @@ private:
 
     tuple<ll, ll, ll, ll, ll, ll> getAddrFp(pair<T, T> edge);
     tuple<vector<int>, vector<int>> calculateSquareHashArray(ll fpS, ll fpD);
+    
 
 public:
     GSS(

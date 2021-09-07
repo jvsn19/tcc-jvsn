@@ -3,13 +3,14 @@
 #include <sstream>
 #include <chrono>
 #include <cstdio>
+
 #include<sys/resource.h>
 #include "helper/hashfunctions.h"
 #include "gss.cpp"
 #include "globals.hpp"
 
-const ll GSS_M = 31000;
-const ll GRAPH_SIZE = 1000;
+const ll GSS_M = 2;
+const ll GRAPH_SIZE = 5000;
 const ll GSS_FP_BIT_SIZE = 12;
 const int SQUARE_HASHING_ATTEMPTS = 15;
 const int TIMER = 5;
@@ -24,6 +25,7 @@ ll hashFunction(string s) {
 }
 
 void run(string filePath) {
+    vector<pair<string,string>> edges;
     collisions = 0;
     GSS<string>* gss = new GSS<string>(
         GSS_M, 
@@ -39,6 +41,7 @@ void run(string filePath) {
     std::ifstream file(filePath);
     string origin, destiny;
     string line;
+    auto startTime = chrono::system_clock::now();
     while (getline(file, line)) {
         if(line[0] == '#') {
             continue;
@@ -46,9 +49,23 @@ void run(string filePath) {
         istringstream ss(line);
         ss >> origin >> destiny;
         gss->insertEdge(make_tuple(make_pair(origin, destiny), 1));
+        edges.push_back(make_pair(origin, destiny));
     }
+    auto endTime = chrono::system_clock::now();
+    std::chrono::duration<double> delta = endTime - startTime;
     file.close();
-    cout << collisions << endl;
+    string s, d;
+    int errors = 0;
+    for (pair<string, string> edge: edges) {
+        string s = edge.first, d = edge.second;
+        if(gss->queryEdge(make_pair(s, d)) == -1) {
+            errors++;
+        }
+    }
+    cout << "Test Result - " << filePath << ":" << endl; 
+    cout << "Going to Leftovers: " << collisions << endl;
+    cout << "Precision: " << 1.0 - ((double) errors / (double) edges.size()) << endl;
+    cout << "Duration to build GSS: " << delta.count() << endl << endl;
     delete gss;
 }
 

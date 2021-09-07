@@ -43,10 +43,11 @@ template <class T> GSS<T>::~GSS() {
 }
 
 template <class T> void GSS<T>::insertEdge(tuple<pair<T, T>, ll> edge) {
+    pair<T, T> pairNodes = get<0>(edge);
     int weigth = get<1>(edge);
     ll hashS, hashD, addrS, addrD, fpS, fpD;
     vector<int> sqHashArrS, sqHashArrD;
-    tie(hashS, hashD, addrS, addrD, fpS, fpD) = getAddrFp(get<0>(edge));
+    tie(hashS, hashD, addrS, addrD, fpS, fpD) = getAddrFp(pairNodes);
     // Using Square Hashing
     tie(sqHashArrS, sqHashArrD) = calculateSquareHashArray(fpS, fpD);
     // Improvement: Mapped Bucket Sampling
@@ -75,18 +76,16 @@ template <class T> void GSS<T>::insertEdge(tuple<pair<T, T>, ll> edge) {
         */
         for (int roomShift = 0; roomShift < numRooms; roomShift++) {
             Slot * slot = graph->getSlot(pos);
-            // cout << slot->getIndex() << " " << slot->getWeigth(roomShift) << " " << roomShift << endl;
             if(
-                ((slot->getIndex() >> (roomShift << 3)) & ((1 << 8) - 1)) == (indexS + (indexD << 4)) &&
+                ((slot->getIndex() >> (roomShift << 3)) & ((1 << 8) - 1)) == (indexS | (indexD << 4)) &&
                 (slot->getFP(roomShift).first == fpS) &&
                 (slot->getFP(roomShift).second == fpD)
             ) {
-                // cout << get<0>(edge).first << " " << get<0>(edge).second << endl;
                 slot->addWeigth(roomShift, slot->getWeigth(roomShift) + weigth);
                 return;
             }
             if (slot->getFP(roomShift).first == 0) { // Empty room
-                slot->setIndex(slot->getIndex() | (indexS + (indexD << 4)) << (numRooms << 3));
+                slot->setIndex(slot->getIndex() | (indexS | (indexD << 4)) << (roomShift << 3));
                 slot->addFingerprint(roomShift, {fpS, fpD});
                 slot->addWeigth(roomShift, weigth);
                 return;
@@ -128,24 +127,47 @@ template <class T> void GSS<T>::insertEdge(tuple<pair<T, T>, ll> edge) {
     }
 }
 
-// template <class T> ll GSS<T>::queryEdge(pair<T, T> edge) {
-//     // ll hashS, hashD, addrS, addrD, fpS, fpD;
-//     // tie(hashS, hashD, addrS, addrD, fpS, fpD) = getAddrFp(edge);
-//     // if(adjMatrix[addrS][addrD].first == make_pair(fpS, fpD)) {
-//     //     return adjMatrix[addrS][addrD].second;
-//     //     ++collisions;
-//     // }
-//     // for(pair<ll, ll> buffer: adjList[hashS]) {
-//     //     if(buffer.first == hashD) {
-//     //         return buffer.second;
-//     //     }
-//     // }
-//     // return -1;
-// }
-
-template <class T> bool GSS<T>::queryVertex(string vertex) {
-    return hashToVertex->find(vertex) != hashToVertex->end();
+template <class T> ll GSS<T>::queryEdge(pair<T, T> edge) {
+    ll hashS, hashD, addrS, addrD, fpS, fpD;
+    vector<int> sqHashArrS, sqHashArrD;
+    tie(hashS, hashD, addrS, addrD, fpS, fpD) = getAddrFp(edge);
+    tie(sqHashArrS, sqHashArrD) = calculateSquareHashArray(fpS, fpD);
+    int key = fpS + fpD;
+    for(int i = 1; i < candidateBuckets; ++i) {
+        key = (key * timer + prime) % modulePrime;
+        int index = key % (sqHashAttmp * sqHashAttmp);
+        int indexS = index / sqHashAttmp,
+            indexD = index % sqHashAttmp;
+        int posS = (addrS + sqHashArrS[indexS]) % graphSize,
+            posD = (addrD + sqHashArrD[indexD]) % graphSize;
+        int pos = posS * graphSize + posD;
+        for (int roomShift = 0; roomShift < numRooms; roomShift++) {
+            Slot * slot = graph->getSlot(pos);
+            if(
+                ((slot->getIndex() >> (roomShift << 3)) & ((1 << 8) - 1)) == (indexS | (indexD << 4)) &&
+                (slot->getFP(roomShift).first == fpS) &&
+                (slot->getFP(roomShift).second == fpD)
+            ) {
+                return slot->getWeigth(roomShift);
+            }
+        }
+        map<ll, int>::iterator it = addrSToLeftovers.find(addrS);
+        if(it != addrSToLeftovers.end()) { // There is no such node yet
+            LinkedList *node = leftovers[it->second];
+            while(node->next != nullptr && node->addr != addrD) {
+                node = node->next;
+            }
+            if (node != nullptr) { // Should add a new edge
+                return node->weigth;
+            }
+        }
+    }
+    return -1;
 }
+
+// template <class T> bool GSS<T>::queryVertex(string vertex) {
+//     // return hashToVertex->find(vertex) != hashToVertex->end();
+// }
 
 template <class T> tuple<ll, ll, ll, ll, ll, ll> GSS<T>::getAddrFp(pair<T, T> edge) {
     ll fingerprintMask = (1 << fpBitSize) - 1;
