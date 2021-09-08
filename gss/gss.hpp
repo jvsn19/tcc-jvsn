@@ -16,11 +16,11 @@ private:
     ull M, graphSize;
     int fpBitSize, sqHashAttmp, timer, prime, modulePrime, candidateBuckets, numRooms, leftoversCount;
     Graph* graph;
-    map<string, ll>* hashToVertex;
-    map<ll, int> addrSToLeftovers;
+    map<string, ull >* hashToVertex;
+    map<ull , int> addrSToLeftovers;
     vector<LinkedList*> leftovers;
 
-    tuple<ll, ll, ll, ll, ll, ll> getAddrFp(pair<T, T> edge);
+    tuple<ull , ull , ull , ull , ull , ull > getAddrFp(pair<T, T> edge);
     tuple<vector<int>, vector<int>> calculateSquareHashArray(ull fpS, ull fpD);
 
 
@@ -38,7 +38,7 @@ public:
         ull (*hashFunction)(T)
     );
     ~GSS(); 
-    void insertEdge(tuple<pair<T, T>, ll> edge);
+    void insertEdge(tuple<pair<T, T>, ull > edge);
     ull queryEdge(pair<T, T> edge);
     bool queryVertex(string vertex);
 };

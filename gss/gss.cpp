@@ -42,7 +42,7 @@ template <class T> GSS<T>::~GSS() {
     }
 }
 
-template <class T> void GSS<T>::insertEdge(tuple<pair<T, T>, ll> edge) {
+template <class T> void GSS<T>::insertEdge(tuple<pair<T, T>, ull > edge) {
     pair<T, T> pairNodes = get<0>(edge);
     int weigth = get<1>(edge);
     ull hashS, hashD, addrS, addrD, fpS, fpD;
@@ -100,7 +100,7 @@ template <class T> void GSS<T>::insertEdge(tuple<pair<T, T>, ll> edge) {
             Otherwise, create a new node to point to the destination node
         Otherwise, create a new entry for that source node and add the destination node
         */
-        map<ll, int>::iterator it = addrSToLeftovers.find(addrS);
+        map<ull , int>::iterator it = addrSToLeftovers.find(addrS);
         if(it == addrSToLeftovers.end()) { // There is no such node yet
             addrSToLeftovers[addrS] = leftoversCount++;
             LinkedList *sourceNode = new LinkedList(addrS, 0);
@@ -151,7 +151,7 @@ template <class T> ull GSS<T>::queryEdge(pair<T, T> edge) {
                 return slot->getWeigth(roomShift);
             }
         }
-        map<ll, int>::iterator it = addrSToLeftovers.find(addrS);
+        map<ull , int>::iterator it = addrSToLeftovers.find(addrS);
         if(it != addrSToLeftovers.end()) { // There is no such node yet
             LinkedList *node = leftovers[it->second];
             while(node->next != nullptr && node->addr != addrD) {
@@ -169,7 +169,7 @@ template <class T> ull GSS<T>::queryEdge(pair<T, T> edge) {
 //     // return hashToVertex->find(vertex) != hashToVertex->end();
 // }
 
-template <class T> tuple<ll, ll, ll, ll, ll, ll> GSS<T>::getAddrFp(pair<T, T> edge) {
+template <class T> tuple<ull , ull , ull , ull , ull , ull > GSS<T>::getAddrFp(pair<T, T> edge) {
     ull fingerprintMask = (1 << fpBitSize) - 1;
     ull hashS = hashFunction(get<0>(edge)), 
         hashD = hashFunction(get<1>(edge));
