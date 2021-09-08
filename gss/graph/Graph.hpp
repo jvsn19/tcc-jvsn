@@ -3,14 +3,14 @@
 
 using namespace std;
 
-typedef long long ll;
+typedef unsigned long long ull;
 
 class Graph {
 private:
     vector<Slot*> graph;
 public:
-    Graph(ll size, int numRooms);
+    Graph(ull size, int numRooms);
     ~Graph();
-    Slot* getSlot(ll pos);
-    void addSlot(ll pos, Slot* slot);
+    Slot* getSlot(ull pos);
+    void addSlot(ull pos, Slot* slot);
 };

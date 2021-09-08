@@ -3,8 +3,8 @@ typedef long long ll;
 class LinkedList {
 public:
     LinkedList* next;
-    ll addr;
+    ull addr;
     int weigth;
 
-    LinkedList(ll addr, int weigth);
+    LinkedList(ull addr, int weigth);
 };

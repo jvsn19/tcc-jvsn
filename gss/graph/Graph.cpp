@@ -1,6 +1,6 @@
 #include "Graph.hpp"
 
-Graph::Graph(ll size, int numRooms) {
+Graph::Graph(ull size, int numRooms) {
     graph = vector<Slot*>(size);
     for(int idx = 0; idx < size; ++idx) {
         graph[idx] = new Slot(numRooms);
@@ -14,10 +14,10 @@ Graph::~Graph() {
     }
 }
 
-Slot* Graph::getSlot(ll pos) {
+Slot* Graph::getSlot(ull pos) {
     return graph[pos];
 }
 
-void Graph::addSlot(ll pos, Slot* slot) {
+void Graph::addSlot(ull pos, Slot* slot) {
     graph[pos] = slot;
 }

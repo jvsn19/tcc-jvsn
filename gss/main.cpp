@@ -9,19 +9,21 @@
 #include "gss.cpp"
 #include "globals.hpp"
 
-const ll GSS_M = 2;
-const ll GRAPH_SIZE = 6000;
-const ll GSS_FP_BIT_SIZE = 12;
+const ull GSS_M = 2;
+const ull GRAPH_SIZE = 3000;
+const ull GSS_FP_BIT_SIZE = 12;
 const int SQUARE_HASHING_ATTEMPTS = 15;
 const int TIMER = 5;
 const int PRIME = 739;
 const int MODULE_PRIME = 1048576;
 const int CANDIDATE_BUCKETS = 5;
 const int NUM_ROOMS = 4;
-ll hashFunction(string s) {
-    ll first = BOB3((unsigned char*)s.c_str(), s.size());
-    ll second = BOB2((unsigned char*)s.c_str(), s.size());
-    return (first << 31) + second;
+const bool STORE_HASH = false;
+
+ull hashFunction(string s) {
+    ull first = BOB3((unsigned char*)s.c_str(), s.size());
+    ull second = BOB2((unsigned char*)s.c_str(), s.size());
+    return (first << 32) + second;
 }
 
 void run(string filePath) {

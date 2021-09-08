@@ -5,13 +5,13 @@
 #include "gss.hpp"
 #include "globals.hpp"
 
-ll collisions;
+ull collisions;
 
 using namespace std;
 
 template <class T> GSS<T>::GSS(
-    ll M,
-    ll graphSize, 
+    ull M,
+    ull graphSize, 
     int fpBitSize,
     int sqHashAttmp,
     int timer,
@@ -19,7 +19,7 @@ template <class T> GSS<T>::GSS(
     int modulePrime,
     int candidateBuckets,
     int numRooms,
-    ll (*hashFunction)(T)):
+    ull (*hashFunction)(T)):
     M(M), 
     graphSize(graphSize), 
     fpBitSize(fpBitSize), 
@@ -45,7 +45,7 @@ template <class T> GSS<T>::~GSS() {
 template <class T> void GSS<T>::insertEdge(tuple<pair<T, T>, ll> edge) {
     pair<T, T> pairNodes = get<0>(edge);
     int weigth = get<1>(edge);
-    ll hashS, hashD, addrS, addrD, fpS, fpD;
+    ull hashS, hashD, addrS, addrD, fpS, fpD;
     vector<int> sqHashArrS, sqHashArrD;
     tie(hashS, hashD, addrS, addrD, fpS, fpD) = getAddrFp(pairNodes);
     // Using Square Hashing
@@ -127,8 +127,8 @@ template <class T> void GSS<T>::insertEdge(tuple<pair<T, T>, ll> edge) {
     }
 }
 
-template <class T> ll GSS<T>::queryEdge(pair<T, T> edge) {
-    ll hashS, hashD, addrS, addrD, fpS, fpD;
+template <class T> ull GSS<T>::queryEdge(pair<T, T> edge) {
+    ull hashS, hashD, addrS, addrD, fpS, fpD;
     vector<int> sqHashArrS, sqHashArrD;
     tie(hashS, hashD, addrS, addrD, fpS, fpD) = getAddrFp(edge);
     tie(sqHashArrS, sqHashArrD) = calculateSquareHashArray(fpS, fpD);
@@ -170,20 +170,20 @@ template <class T> ll GSS<T>::queryEdge(pair<T, T> edge) {
 // }
 
 template <class T> tuple<ll, ll, ll, ll, ll, ll> GSS<T>::getAddrFp(pair<T, T> edge) {
-    ll fingerprintMask = (1 << fpBitSize) - 1;
-    ll hashS = hashFunction(get<0>(edge)), 
+    ull fingerprintMask = (1 << fpBitSize) - 1;
+    ull hashS = hashFunction(get<0>(edge)), 
         hashD = hashFunction(get<1>(edge));
     /*
     Fingerprints here cannot be 1
     */
-    ll fpS = max(hashS & fingerprintMask, (ll) 1),
-        fpD = max(hashD & fingerprintMask, (ll) 1);
-    ll addrS = (hashS >> fpBitSize) % graphSize,
+    ull fpS = max(hashS & fingerprintMask, (ull) 1),
+        fpD = max(hashD & fingerprintMask, (ull) 1);
+    ull addrS = (hashS >> fpBitSize) % graphSize,
         addrD = (hashD >> fpBitSize) % graphSize;
     return {addrS << fpBitSize + fpS, addrD << fpBitSize + fpD, addrS, addrD, fpS, fpD};
 }
 
-template <class T> tuple<vector<int>, vector<int>> GSS<T>::calculateSquareHashArray(ll fpS, ll fpD) {
+template <class T> tuple<vector<int>, vector<int>> GSS<T>::calculateSquareHashArray(ull fpS, ull fpD) {
     vector<int> sqHashArrS = vector<int>(sqHashAttmp);
     vector<int> sqHashArrD = vector<int>(sqHashAttmp);
     sqHashArrS[0] = fpS;

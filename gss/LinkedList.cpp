@@ -1,7 +1,7 @@
 #include "LinkedList.hpp"
 
 LinkedList::LinkedList(
-    ll addr, 
+    ull addr, 
     int weigth):
     addr(addr), 
     weigth(weigth), 

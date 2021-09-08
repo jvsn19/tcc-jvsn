@@ -1,1 +1,1 @@
-extern long long collisions;
+extern unsigned long long collisions;
