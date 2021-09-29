@@ -3,3 +3,4 @@ test*
 datasets
 main$
 *.ignoreme
+massif.*

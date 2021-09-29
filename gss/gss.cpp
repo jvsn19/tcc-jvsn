@@ -19,7 +19,8 @@ template <class T> GSS<T>::GSS(
     int modulePrime,
     int candidateBuckets,
     int numRooms,
-    ull (*hashFunction)(T)):
+    ull (*hashFunction)(T),
+    bool shouldStoreVertex):
     M(M), 
     graphSize(graphSize), 
     fpBitSize(fpBitSize), 
@@ -29,14 +30,14 @@ template <class T> GSS<T>::GSS(
     modulePrime(modulePrime),
     candidateBuckets(candidateBuckets),
     numRooms(numRooms),
-    hashFunction(hashFunction) {
+    hashFunction(hashFunction),
+    shouldStoreVertex(shouldStoreVertex) {
     graph = new Graph(graphSize * graphSize, numRooms);
     leftoversCount = 0;
 }
 
 template <class T> GSS<T>::~GSS() {
     delete graph;
-    delete hashToVertex;
     for(LinkedList *node: leftovers) {
         delete node;
     }
@@ -47,7 +48,11 @@ template <class T> void GSS<T>::insertEdge(tuple<pair<T, T>, ull > edge) {
     int weigth = get<1>(edge);
     ull hashS, hashD, addrS, addrD, fpS, fpD;
     vector<int> sqHashArrS, sqHashArrD;
-    tie(hashS, hashD, addrS, addrD, fpS, fpD) = getAddrFp(pairNodes);
+    tie(hashS, addrS, fpS, hashD, addrD, fpD) = getAddrFp(pairNodes);
+    if(shouldStoreVertex) {
+        hashToVertex[hashS].push_back(pairNodes.first);
+        hashToVertex[hashS].push_back(pairNodes.second);
+    } 
     // Using Square Hashing
     tie(sqHashArrS, sqHashArrD) = calculateSquareHashArray(fpS, fpD);
     // Improvement: Mapped Bucket Sampling
@@ -127,10 +132,10 @@ template <class T> void GSS<T>::insertEdge(tuple<pair<T, T>, ull > edge) {
     }
 }
 
-template <class T> ull GSS<T>::queryEdge(pair<T, T> edge) {
+template <class T> int GSS<T>::queryEdge(pair<T, T> edge) {
     ull hashS, hashD, addrS, addrD, fpS, fpD;
     vector<int> sqHashArrS, sqHashArrD;
-    tie(hashS, hashD, addrS, addrD, fpS, fpD) = getAddrFp(edge);
+    tie(hashS, addrS, fpS, hashD, addrD, fpD) = getAddrFp(edge);
     tie(sqHashArrS, sqHashArrD) = calculateSquareHashArray(fpS, fpD);
     int key = fpS + fpD;
     for(int i = 1; i < candidateBuckets; ++i) {
@@ -169,6 +174,82 @@ template <class T> ull GSS<T>::queryEdge(pair<T, T> edge) {
 //     // return hashToVertex->find(vertex) != hashToVertex->end();
 // }
 
+// template <class T> vector<ull> GSS<T>::nodeSuccessorQuery(T start) {
+//     vector<T> successors;
+//     ull hashS, addrS, fpS;
+//     vector<int> sqHashArrS;
+//     tie(hashS, addrS, fpS) = getAddrFpForNode(start);
+//     vector<int> sqHashArray = calculateSquareHashArrayForNodeFingerprint(fpS);
+//     for(int attempt = 0; attempt < sqHashAttmp; ++attempt) {
+//         int posS = (addrS + sqHashArray[attempt]) % graphSize;
+//         /* 
+//             Let's search for a candidate posD to complement posS and find a slot where the fingerprint start is equal to fpS
+//         */ 
+//         for (int posD = 0; posD < graphSize; ++posD) { 
+//             int pos = posS * graphSize + posD;
+//             for(int roomShift = 0; roomShift < numRooms; ++roomShift) {
+//                 Slot* slot = graph->getSlot(pos);
+//                 if(
+//                     ((slot->getIndex() >> (roomShift << 3)) & ((1 << 8) - 1)) == (indexS | (indexD << 4)) &&
+//                     (slot->getFP(roomShift).first == fpS)
+//                 ) {
+//                     int fpD = slot->getFP(roomShift).second;
+//                     int indexD = (slot->getIndex() >> (roomShift << 3) + 4)) & ((1 << 4) - 1);
+//                     int sqHashD = fpD;
+//                     for(int sqHashIdx = 0; sqHashIdx < indexD; ++sqHashIdx) {
+//                         sqHashD = (sqHashD * timer + prime) % modulePrime;
+//                     }
+//                     /*
+//                         The current posD is already moduled by graphSize
+//                         Remember that posD = (addrD + sqHashArrD[indexD]) % graphSize;
+//                         So we need to undo that module adding graphSize until posD > shifter
+//                         newPosD = addrD + sqHashArrD[indexD] => addrD = newPosD - sqHashArrD[indexD]
+//                     */
+//                     int posDwithModuleGraphSize = posD;
+//                     while (posDwithModuleGraphSize < sqHashD) {
+//                         posDwithModuleGraphSize += graphSize;
+//                     }
+//                     int addrD = posDwithModuleGraphSize - sqHashD;
+//                     ull hashD = (addrD << fpBitSize) + fpD;
+//                     if(hashToVertex.find(hashD) != hashToVertex.end()) {
+//                         successors.push_back(hashToVertex[hashD]);
+//                     }
+//                 }
+//             }
+//         }
+//     }
+//     map<ull , int>::iterator it = addrSToLeftovers.find(addrS);
+//     if(it != addrSToLeftovers.end()) {
+//         LinkedList* cur = leftovers[it->second];
+//         if(cur->weigth != -1) { // Self-loop
+//             successors.push_back(hashToVertex[cur->addr]);
+//         }
+//         while(cur->next != nullptr) {
+//             successors.push_back(cur->next->addr);
+//             cur = cur->next;
+//         }
+//     }
+//     return successors;
+// }
+
+template <class T> vector<int> GSS<T>::calculateSquareHashArrayForNodeFingerprint(ull fingerprint) {
+    vector<int> sqHashArray = vector<int>(sqHashAttmp);
+    sqHashArray[0] = fingerprint;
+    for(int i = 1; i < sqHashAttmp; ++i) {
+        sqHashArray[i] = (sqHashArray[i-1] * timer + prime) % modulePrime;
+        sqHashArray[i] = (sqHashArray[i-1] * timer + prime) % modulePrime;
+    }
+    return sqHashArray;
+}
+
+template <class T> tuple<ull, ull, ull> GSS<T>::getAddrFpForNode(T node) {
+    ull fingerprintMask = (1 << fpBitSize) - 1;
+    ull hashValue = hashFunction(node);
+    ull fingerprint = max(hashValue & fingerprintMask, (ull) 1); // Fingerprint cannot be 1
+    ull addressValue = (hashValue >> fpBitSize) % graphSize;
+    return {addressValue << fpBitSize + fingerprint, addressValue, fingerprint};
+}
+
 template <class T> tuple<ull , ull , ull , ull , ull , ull > GSS<T>::getAddrFp(pair<T, T> edge) {
     ull fingerprintMask = (1 << fpBitSize) - 1;
     ull hashS = hashFunction(get<0>(edge)), 
@@ -180,17 +261,9 @@ template <class T> tuple<ull , ull , ull , ull , ull , ull > GSS<T>::getAddrFp(p
         fpD = max(hashD & fingerprintMask, (ull) 1);
     ull addrS = (hashS >> fpBitSize) % graphSize,
         addrD = (hashD >> fpBitSize) % graphSize;
-    return {addrS << fpBitSize + fpS, addrD << fpBitSize + fpD, addrS, addrD, fpS, fpD};
+    return tuple_cat(getAddrFpForNode(get<0>(edge)), getAddrFpForNode(get<1>(edge)));
 }
 
 template <class T> tuple<vector<int>, vector<int>> GSS<T>::calculateSquareHashArray(ull fpS, ull fpD) {
-    vector<int> sqHashArrS = vector<int>(sqHashAttmp);
-    vector<int> sqHashArrD = vector<int>(sqHashAttmp);
-    sqHashArrS[0] = fpS;
-    sqHashArrD[0] = fpD;
-    for(int i = 1; i < sqHashAttmp; ++i) {
-        sqHashArrS[i] = (sqHashArrS[i-1] * timer + prime) % modulePrime;
-        sqHashArrD[i] = (sqHashArrD[i-1] * timer + prime) % modulePrime;
-    }
-    return {sqHashArrS, sqHashArrD};
+    return {calculateSquareHashArrayForNodeFingerprint(fpS), calculateSquareHashArrayForNodeFingerprint(fpD)};
 }

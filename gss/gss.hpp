@@ -15,14 +15,16 @@ private:
     ull (*hashFunction)(T);
     ull M, graphSize;
     int fpBitSize, sqHashAttmp, timer, prime, modulePrime, candidateBuckets, numRooms, leftoversCount;
+    bool shouldStoreVertex;
     Graph* graph;
-    map<string, ull >* hashToVertex;
+    map<ull, vector<T>> hashToVertex;
     map<ull , int> addrSToLeftovers;
     vector<LinkedList*> leftovers;
 
     tuple<ull , ull , ull , ull , ull , ull > getAddrFp(pair<T, T> edge);
     tuple<vector<int>, vector<int>> calculateSquareHashArray(ull fpS, ull fpD);
-
+    tuple<ull, ull, ull> getAddrFpForNode(T node);
+    vector<int> calculateSquareHashArrayForNodeFingerprint(ull fingerprint);
 
 public:
     GSS(
@@ -35,10 +37,12 @@ public:
         int modulePrime,
         int candidateBuckets,
         int numRooms,
-        ull (*hashFunction)(T)
+        ull (*hashFunction)(T),
+        bool shouldStoreVertex
     );
     ~GSS(); 
     void insertEdge(tuple<pair<T, T>, ull > edge);
-    ull queryEdge(pair<T, T> edge);
+    int queryEdge(pair<T, T> edge);
     bool queryVertex(string vertex);
+    vector<ull> nodeSuccessorQuery(T start);
 };
