@@ -7,9 +7,9 @@ typedef unsigned long long ull;
 
 class Graph {
 private:
-    vector<Slot*> graph;
+    Slot **graph = new Slot*[GRAPH_SIZE * GRAPH_SIZE];
 public:
-    Graph(ull size, int numRooms);
+    Graph();
     ~Graph();
     Slot* getSlot(ull pos);
     void addSlot(ull pos, Slot* slot);

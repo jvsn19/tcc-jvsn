@@ -6,22 +6,28 @@
 #include <cstring>
 #include <tuple>
 
+#define GRAPH_SIZE 6000
+#define NUM_ROOMS 4
+
 #include<sys/resource.h>
 #include "gss/helper/hashfunctions.h"
 #include "gss/gss.cpp"
 #include "gss/globals.hpp"
 
 const ull GSS_M = 2;
-const ull GRAPH_SIZE = 6000;
 const ull GSS_FP_BIT_SIZE = 12;
-const int SQUARE_HASHING_ATTEMPTS = 15;
-const int TIMER = 7;
-const int PRIME = 739;
-const int MODULE_PRIME = 108971;
-const int CANDIDATE_BUCKETS = 5;
-const int NUM_ROOMS = 4;
+const ull SQUARE_HASHING_ATTEMPTS = 15;
+const ull TIMER = 7;
+const ull PRIME = 739;
+const long long MODULE_PRIME = 108971;
+const ull CANDIDATE_BUCKETS = 5;
 const bool STORE_HASH = false;
-const int K_MER_SIZE = 23;
+const ull K_MER_SIZE = 23;
+
+void initialize() {
+    collisions = 0;
+    fitInMatrix = 0;
+}
 
 char * shift_left(char *s) {
     size_t n = std::strlen(s);
@@ -29,7 +35,7 @@ char * shift_left(char *s) {
     return s;
 }
 
-tuple<string, string> get_sub_kmers(string kmer, int kmer_size = K_MER_SIZE) {
+tuple<string, string> get_sub_kmers(string kmer, ull kmer_size = K_MER_SIZE) {
     return {kmer.substr(0, kmer_size - 1), kmer.substr(1, kmer_size)};
 }
 
@@ -39,9 +45,9 @@ ull hashFunction(string s) {
     return (first << 32) + second;
 }
 
-void run_debruijn(string filePath, int kmer_size = 3) {
-    vector<pair<string,string>> edges;
-    collisions = 0;
+void run_debruijn(string filePath, ull kmer_size = 3) {
+    initialize();
+    map<pair<string,string>, int> edges;
     GSS<string>* gss = new GSS<string>(
         GSS_M, 
         GRAPH_SIZE, 
@@ -64,23 +70,27 @@ void run_debruijn(string filePath, int kmer_size = 3) {
         gss->insertEdge(make_tuple(make_pair(origin, destiny), 1));
         shift_left(kmer);
         kmer[kmer_size - 1] = genomaSeq.get();
-        edges.push_back(make_pair(origin, destiny));
+        pair<string, string> edge_pair = make_pair(origin, destiny);
+        if(edges.find(edge_pair) == edges.end()) edges[edge_pair] = 0;
+        edges[make_pair(origin, destiny)] += 1;
     }
     auto endTime = chrono::system_clock::now();
     std::chrono::duration<double> delta = endTime - startTime;
     genomaSeq.close();
     string s, d;
-    int errors = 0;
+    ull errors = 0;
     startTime = chrono::system_clock::now();
-    for (pair<string, string> edge: edges) {
+    for (const auto& [edge, count]: edges) {
         string s = edge.first, d = edge.second;
-        if(gss->queryEdge(make_pair(s, d)) == -1) {
+        if(gss->queryEdge(make_pair(s, d)) != count) {
+            // cout << "Error: " << (gss->queryEdge(make_pair(s, d))) << " " << count << endl;
             errors++;
         }
     }
     endTime = chrono::system_clock::now();
     std::chrono::duration<double> deltaQuery = endTime - startTime;
     cout << "Test Result - " << filePath << ":" << endl; 
+    cout << "Fit in Matrix: " << fitInMatrix << endl; 
     cout << "Going to Leftovers: " << collisions << endl;
     cout << "Precision: " << 1.0 - ((double) errors / (double) edges.size()) << endl;
     cout << "Duration to build GSS: " << delta.count() << endl;
@@ -89,8 +99,8 @@ void run_debruijn(string filePath, int kmer_size = 3) {
 }
 
 void run(string filePath) {
-    vector<pair<string,string>> edges;
-    collisions = 0;
+    initialize();
+    map<pair<string,string>, int> edges;
     GSS<string>* gss = new GSS<string>(
         GSS_M, 
         GRAPH_SIZE, 
@@ -114,23 +124,28 @@ void run(string filePath) {
         istringstream ss(line);
         ss >> origin >> destiny;
         gss->insertEdge(make_tuple(make_pair(origin, destiny), 1));
-        edges.push_back(make_pair(origin, destiny));
+        pair<string, string> edge_pair = make_pair(origin, destiny);
+        if(edges.find(edge_pair) == edges.end()) edges[edge_pair] = 0;
+        edges[make_pair(origin, destiny)] += 1;
     }
     auto endTime = chrono::system_clock::now();
     std::chrono::duration<double> delta = endTime - startTime;
     file.close();
     string s, d;
-    int errors = 0;
+    ull errors = 0;
     startTime = chrono::system_clock::now();
-    for (pair<string, string> edge: edges) {
+    for (const auto& [edge, count]: edges) {
         string s = edge.first, d = edge.second;
-        if(gss->queryEdge(make_pair(s, d)) == -1) {
+        if(gss->queryEdge(make_pair(s, d)) != count) {
+            // cout << "Error: " << (gss->queryEdge(make_pair(s, d))) << " " << count << endl;
             errors++;
         }
     }
+    cout << errors << endl;
     endTime = chrono::system_clock::now();
     std::chrono::duration<double> deltaQuery = endTime - startTime;
     cout << "Test Result - " << filePath << ":" << endl; 
+    cout << "Fit in Matrix: " << fitInMatrix << endl; 
     cout << "Going to Leftovers: " << collisions << endl;
     cout << "Precision: " << 1.0 - ((double) errors / (double) edges.size()) << endl;
     cout << "Duration to build GSS: " << delta.count() << endl;
@@ -143,6 +158,7 @@ int main(int argc, char **argv) {
     // run("datasets/Cit-HepPh.txt");
     // run("datasets/web-NotreDame.txt");
     run_debruijn("datasets/dna.50MB", K_MER_SIZE);
+    // run_debruijn("datasets/dna.5MB", K_MER_SIZE);
     // run_debruijn("datasets/test");
     return 0;
 }

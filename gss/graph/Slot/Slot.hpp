@@ -1,21 +1,22 @@
 #include <utility>
-#include <vector>
 
 using namespace std;
+typedef unsigned long long ull;
 
 class Slot {
 private:
-    int index;
-    vector<pair<int, int>> fingerprints;
-    vector<int> weigths;
+    ull index;
+    pair<int, int> *fingerprints = new pair<int, int>[NUM_ROOMS];
+    ull *weigths = new ull[NUM_ROOMS];
     
 public:
     Slot();
-    Slot(int numRooms);
-    pair<int, int> getFP(int room);
-    int getIndex();
-    int getWeigth(int room);
-    void setIndex(int index);
-    void addFingerprint(int room, pair<int, int> fingerprint);
-    void addWeigth(int room, int weigth);
+    Slot(ull numRooms);
+    ~Slot();
+    pair<ull, ull> getFP(ull room);
+    ull getIndex();
+    ull getWeigth(ull room);
+    void setIndex(ull index);
+    void addFingerprint(ull room, pair<ull, ull> fingerprint);
+    void addWeigth(ull room, ull weigth);
 };

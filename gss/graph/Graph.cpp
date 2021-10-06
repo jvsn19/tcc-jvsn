@@ -1,17 +1,17 @@
 #include "Graph.hpp"
 
-Graph::Graph(ull size, int numRooms) {
-    graph = vector<Slot*>(size);
-    for(int idx = 0; idx < size; ++idx) {
-        graph[idx] = new Slot(numRooms);
+Graph::Graph() {
+    for(ull idx = 0; idx < GRAPH_SIZE * GRAPH_SIZE; ++idx) {
+        graph[idx] = new Slot();
     }
-
 }
 
 Graph::~Graph() {
-    for(int idx = 0; idx < graph.size(); ++idx) {
+    size_t size = sizeof(graph)/sizeof(graph[0]);
+    for(ull idx = 0; idx < size; ++idx) {
         delete graph[idx];
     }
+    delete[] graph;
 }
 
 Slot* Graph::getSlot(ull pos) {

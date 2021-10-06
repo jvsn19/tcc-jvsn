@@ -2,7 +2,7 @@
 
 LinkedList::LinkedList(
     ull addr, 
-    int weigth):
+    ull weigth):
     addr(addr), 
     weigth(weigth), 
     next(nullptr) {}

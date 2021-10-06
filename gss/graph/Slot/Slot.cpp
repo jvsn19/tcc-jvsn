@@ -2,32 +2,31 @@
 
 Slot::Slot() {}
 
-Slot::Slot(int numRooms){
-    index = 0;
-    fingerprints = vector<pair<int, int>>(numRooms, {0,0});
-    weigths = vector<int>(numRooms, 0);
+Slot::~Slot() {
+    delete[] fingerprints;
+    delete[] weigths;
 }
 
-pair<int, int> Slot::getFP(int room) {
+pair<ull, ull> Slot::getFP(ull room) {
     return fingerprints[room];
 }
 
-int Slot::getIndex() {
+ull Slot::getIndex() {
     return index;
 }
 
-int Slot::getWeigth(int room) {
+ull Slot::getWeigth(ull room) {
     return weigths[room];
 }
 
-void Slot::setIndex(int index) {
+void Slot::setIndex(ull index) {
     this->index = index;
 }
 
-void Slot::addFingerprint(int room, pair<int, int> fingerprint) {
+void Slot::addFingerprint(ull room, pair<ull, ull> fingerprint) {
     fingerprints[room] = fingerprint; 
 }
 
-void Slot::addWeigth(int room, int weigth) {
+void Slot::addWeigth(ull room, ull weigth) {
     weigths[room] = weigth;
 }
