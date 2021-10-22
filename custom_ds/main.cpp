@@ -11,14 +11,19 @@
     - tamanho da hm deve ser o multiplicador * estimativa da qt de elementos
     - sensibilidade: # arestas encontradas / # arestas (true positives / positives)
     - especificidade: # true negatives / # negatives
+
+    - pegar proximo primo maior que 2* tamanho seq
+    - [opt] fibonnacci hashing
 */
 
 typedef unsigned long long ull;
 
 using namespace std;
 
-const ull HASHMAP_SIZE = 10*(1 << 20);
-const ull KMER_SIZE = 7;
+const double MULT_FACTOR = 2;
+const ull FILE_SIZE = 5;
+const ull HASHMAP_SIZE = MULT_FACTOR * FILE_SIZE * (1 << 20);
+const ull KMER_SIZE = 15;
 const ull MASK = ((ull) 1 << (2 * (KMER_SIZE - 1))) - 1;
 
 int bases[256];
@@ -49,12 +54,11 @@ void check_debruijn(set<string> kmerSet, ull kmer_size, Hash<ull, ull> *hashTabl
     ull cntTP = 0, cntTN = 0, cntFP = 0, cntFN = 0, cntCorrect = 0, cntWrong = 0, cntErrors = 0;
     vector<string> stack = {""};
     while(!stack.empty()) {
-        try {
             string curKMer = stack.back();
             stack.pop_back();
             if(curKMer.size() == kmer_size) {
-                ull hashKMer = startRollingHash(curKMer.substr(0, curKMer.size() - 1));
-                bool contains = (hashTable->get(hashKMer) >> bases[curKMer.back()] & 1);
+                ull hashKMer = startRollingHash(curKMer.substr(0, curKMer.size() - 1)) % HASHMAP_SIZE;
+                bool contains = (hashTable->get(hashKMer) >> bases[curKMer.back()] & 1);;
                 if(kmerSet.find(curKMer) != kmerSet.end()) { // Current K-Mer in set
                     ++cntCorrect;
                     contains ? ++cntTP : ++cntFN;
@@ -69,11 +73,7 @@ void check_debruijn(set<string> kmerSet, ull kmer_size, Hash<ull, ull> *hashTabl
                     stack.push_back(curKMer + ch);
                 }
             }
-        } catch (const exception e) {
-            ++cntErrors;
-        }
     }
-    cout << "Errors: " << cntErrors << endl;
     cout << "True Positives: " << cntTP << endl;
     cout << "True Negatives: " << cntTN << endl;
     cout << "False Positives: " << cntFP << endl;
@@ -88,23 +88,23 @@ void run_debruijn(string filePath, ull kmerSize = KMER_SIZE - 1) {
     set<string> kmerSet;
     std::ifstream genomaSeq(filePath);
     char nextChar;
-    char tmp[kmerSize];
-    string kmer;
+    string kmer = "";
     ull hash;
-    genomaSeq.read(tmp, kmerSize);
-    kmer = tmp;
     hash = startRollingHash(kmer);
-    while (!genomaSeq.eof()) {
-        nextChar = genomaSeq.get();
+    while (genomaSeq.get(nextChar)) {
         if (nextChar != 'A' && nextChar != 'C' && nextChar != 'G' && nextChar != 'T') {
             continue;
         }
         kmer += nextChar;
+        if(kmer.size() < KMER_SIZE) {
+            continue;
+        }
         kmerSet.insert(kmer);
-        hashTable->set(hash, 1 << bases[nextChar]);
+        hashTable->set(hash % HASHMAP_SIZE, 1 << bases[nextChar]);
         kmer.erase(0, 1);
         hash = nextKMerHash(nextChar, hash);
     }
+    genomaSeq.close();
     check_debruijn(kmerSet, kmerSize + 1, hashTable);
     delete hashTable;
 }
@@ -114,8 +114,9 @@ int main() {
     bases['C'] = 1;
     bases['G'] = 2;
     bases['T'] = 3;
+    run_debruijn("../datasets/dna.5MB");
+    // run_debruijn("../datasets/dna.10MB");
     // run_debruijn("../datasets/dna.50MB");
-    // run_debruijn("../datasets/dna.5MB");
-    run_debruijn("../datasets/test");
+    // run_debruijn("../datasets/test");
     return 0;
 }

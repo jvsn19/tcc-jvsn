@@ -11,7 +11,7 @@ template <typename T, typename V> Hash<T, V>::~Hash() {
 
 template <typename T, typename V> V &Hash<T, V>::get(T key) {
     if(key >= size) {
-        throw std::out_of_range("blah");
+        throw std::out_of_range("Index out of bounds");
     }
     return hashTable[key];
 }
@@ -24,14 +24,7 @@ template <typename T, typename V> void Hash<T, V>::insert(T key, V val) {
 }
 
 template <typename T, typename V> void Hash<T, V>::set(T key, short mask) {
-    if(key >= size) {
-        return;
-    }
-    hashTable[key] |= mask;
-    if (hashTable[key] & mask) {
-        // Handle collision
-    }
-    else {
+    if ((hashTable[key] & mask) == 0) {
         hashTable[key] |= mask;
     }
 }
