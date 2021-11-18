@@ -123,7 +123,7 @@ void run_debruijn(string filePath, ull kmerSize = KMER_SIZE - 1, ull hashMapSize
         hash = nextKMerHash(nextChar, hash);
     }
     genomaSeq.close();
-    check_debruijn(kmerSet, kmerSize + 1, hashTable);
+    check_debruijn(kmerSet, kmerSize + 1, hashTable, hashMapSize);
     delete hashTable;
 }
 
