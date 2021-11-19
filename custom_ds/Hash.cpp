@@ -11,10 +11,12 @@ ull fibHashing(ull key, int nBits) {
     return (((11400714819323198485 * key)) >> (64 - nBits)) & ((1 << nBits) - 1);
 }
 
-template <typename T, typename V> Hash<T, V>::Hash(T size, int fpSize, bool useBuffer):
-size(size),
+template <typename T, typename V> Hash<T, V>::Hash(int nBitSize, int kmerSize, int fpSize, bool useBuffer):
+nBitSize(nBitSize),
+kmerSize(kmerSize),
 fpSize(fpSize),
 useBuffer(useBuffer) {
+    size = (1 << (nBitSize - 1));
     hashTable = new T[size];
     fpTable = new Fingerprint*[size * 2];
     for (int idx = 0; idx < size * 2; ++idx) {
@@ -64,7 +66,6 @@ template <typename T, typename V> void Hash<T, V>::set(T key, char mask, ull has
     Fingerprint *fp = new Fingerprint(fpSize, fpInt);
     if(!fpTable[key]->exists() || fpTable[key]->testInt(fpSize, fpInt)) {
         fpTable[key] = fp;
-        // cout << "I " << key << " " << hash << " " <<  fpInt << " " << fpTable[key]->get(fpSize) << endl; // 5815452
         T hashIndex = (T) key >> 1;
         if(key % 2 > 0) {
             mask <<= 4;
@@ -83,37 +84,33 @@ template <typename T, typename V> void Hash<T, V>::set(T key, char mask, ull has
             }
             head->next = newNode;
         }
-        // cout << "Leftover " << key << " " << hash << " " <<  fpInt << " " << newNode->fp->get(fpSize) << " " << (head == nullptr) << endl; // 5815452
     }
 }
 
-template <typename T, typename V> bool Hash<T, V>::check(T key, int base, ull hash, bool a) {
+template <typename T, typename V> bool Hash<T, V>::check(T key, int base, ull hash) {
     int fpInt = fibHashing(hash & ((1 << fpSize) - 1), 3);
     if(!fpTable[key]->exists()) {
         return false;
     }
-    // if(a) cout << key << " " << " " << hash << " " <<  fpInt << " " << fpTable[key]->get(fpSize) << endl;
     if(fpTable[key]->testInt(fpSize, fpInt)) {
-        // cout << key << " " << fpInt << " " << 1 << endl;
         T hashIndex = (T) key >> 1;
         V value = hashTable[hashIndex];
         if(key % 2 > 0) {
             value >>= 4;
         }
-        // if(a && ((value >> base) & 1)) cout << "true pos " << key << " " << " " << hash << " " <<  fpInt << " " << fpTable[key]->get(fpSize) << endl;
         return (value >> base) & 1;
     }
     else if (useBuffer) {
-        // if(a) cout << key << " " << " " << hash << " " <<  fpInt << " " << fpTable[key]->get(fpSize) << endl;
         LinkedList *head = buffer[key];
-        while(head && !head->fp->testInt(fpSize, fpInt)) {
+        while(head) {
+            if (head->fp->testInt(fpSize, fpInt) && (head->edges >> base) & 1) {
+                break;
+            }
             head = head->next;
         }
         if(head) {
-            // if(!a && ((head->edges >> base) & 1)) cout << "false pos " << key << " " << " " << hash << " " <<  fpInt << " " << head->fp->get(fpSize) << endl;
             return (head->edges >> base) & 1;
         }
     }
-    // if(!a) cout << "true neg " << key << " " << " " << hash << " " <<  fpInt << " " << fpTable[key]->get(fpSize) << endl;
     return false;
 }

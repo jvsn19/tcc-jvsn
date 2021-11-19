@@ -12,12 +12,15 @@ class Hash {
         std::map<T, LinkedList*> buffer;
         ull size;
         int fpSize;
+        int kmerSize;
+        int nBitSize;
         bool useBuffer;
 
     public:
-        Hash(T size, int fpSize, bool useBuffer);
+        Hash(int nBitSize, int kmerSize, int fpSize, bool useBuffer);
         ~Hash();
         V get(T key);
         void set(T key, char pos, ull hash);
-        bool check(T key, int base, ull hash, bool a);
+        bool check(T key, int base, ull hash);
+        bool findPath(string path);
 };

@@ -8,18 +8,6 @@
 
 #include "Hash.cpp"
 #include "globals.cpp"
-/*
-    - Criar const multiplicador [1.5, 2]
-    - tamanho da hm deve ser o multiplicador * estimativa da qt de elementos
-    - sensibilidade: # arestas encontradas / # arestas (true positives / positives)
-    - especificidade: # true negatives / # negatives
-
-    - pegar proximo primo maior que 2* tamanho seq
-    - [opt] fibonnacci hashing
-
-    - 4^k => tamanho do universo (# kmers que poderíamos ter)
-    - hashmap_size = 
-*/
 
 typedef unsigned long long ull;
 
@@ -38,7 +26,6 @@ int bases[256];
 ull fibHashing(ull key) {
     key += 1;
     return (((11400714819323198485 * key)) >> (64 - SHIFT)) & ((1 << SHIFT) - 1);
-    // return key & ((1 << SHIFT) - 1);
 }
 
 ull passMask(ull hash, ull mask = MASK) {
@@ -62,18 +49,42 @@ ull nextKMerHash(char next, ull hash) {
     return passMask(hash);
 }
 
-void check_debruijn(set<string> kmerSet, ull kmer_size, Hash<ull, char> *hashTable, ull hashMapSize = HASHMAP_SIZE) {
+bool transverseDebruijn(string filePath, ull kmerSize, Hash<ull, char> *hashTable) {
+    std::ifstream genomaSeq(filePath);
+     char nextChar;
+    string kmer = "";
+    ull hash;
+    while(kmer.size() < kmerSize) {
+        genomaSeq.get(nextChar);
+        kmer += nextChar;
+    }
+    hash = startRollingHash(kmer);
+    while (genomaSeq.get(nextChar)) {
+        if (nextChar != 'A' && nextChar != 'C' && nextChar != 'G' && nextChar != 'T') {
+            continue;
+        }
+        kmer += nextChar;
+        if(!hashTable->check(fibHashing(hash), bases[nextChar], hash)) {
+            return false;
+        }
+        kmer.erase(0, 1);
+        hash = nextKMerHash(nextChar, hash);
+    }
+    genomaSeq.close();
+    return true;
+}
+
+void checkDebruijn(set<string> kmerSet, ull kmerSize, Hash<ull, char> *hashTable) {
     char alphabet[] = {'A', 'C', 'G', 'T'};
     ull cntTP = 0, cntTN = 0, cntFP = 0, cntFN = 0, cntWrong = 0;
     vector<string> stack = {""};
     while(!stack.empty()) {
             string curKMer = stack.back();
             stack.pop_back();
-            if(curKMer.size() == kmer_size) {
+            if(curKMer.size() == kmerSize) {
                 ull kMerInt = startRollingHash(curKMer.substr(0, curKMer.size() - 1));
-                bool contains = hashTable->check(fibHashing(kMerInt), bases[curKMer.back()], kMerInt, kmerSet.find(curKMer) != kmerSet.end());
-                if(kmerSet.find(curKMer) != kmerSet.end()) { // Current K-Mer in set
-                    // cout << "CHECK: " << kMerInt << " " << fibHashing(kMerInt) << endl;
+                bool contains = hashTable->check(fibHashing(kMerInt), bases[curKMer.back()], kMerInt);
+                if(kmerSet.find(curKMer) != kmerSet.end()) {
                     contains ? ++cntTP : ++cntFN;
                 }
                 else {
@@ -99,8 +110,8 @@ void check_debruijn(set<string> kmerSet, ull kmer_size, Hash<ull, char> *hashTab
 }
 
 
-void run_debruijn(string filePath, ull kmerSize = KMER_SIZE - 1, ull hashMapSize = HASHMAP_SIZE, int fpSize = FPSIZE, string useBuffer = "0") {
-    Hash<ull, char> *hashTable = new Hash<ull, char>(hashMapSize, fpSize, useBuffer == "1");
+void runDebruijn(string filePath, ull kmerSize, int nBitSize, int fpSize = FPSIZE, string useBuffer = "0") {
+    Hash<ull, char> *hashTable = new Hash<ull, char>(nBitSize, kmerSize, fpSize, useBuffer == "1");
     set<string> kmerSet;
     std::ifstream genomaSeq(filePath);
     char nextChar;
@@ -117,13 +128,13 @@ void run_debruijn(string filePath, ull kmerSize = KMER_SIZE - 1, ull hashMapSize
         }
         kmer += nextChar;
         kmerSet.insert(kmer);
-        // cout << "SET: " << hash << " " << fibHashing(hash) << endl;
         hashTable->set(fibHashing(hash), 1 << bases[nextChar], hash);
         kmer.erase(0, 1);
         hash = nextKMerHash(nextChar, hash);
     }
     genomaSeq.close();
-    check_debruijn(kmerSet, kmerSize + 1, hashTable, hashMapSize);
+    checkDebruijn(kmerSet, kmerSize + 1, hashTable);
+    // cout << transverseDebruijn("../datasets/test.me", kmerSize, hashTable) << endl;
     delete hashTable;
 }
 
@@ -158,6 +169,6 @@ int main(int argc, char* argv[]) {
                 filePath = argv[1];
         }
     }
-    run_debruijn(filePath, kmerSize - 1, hashMapSize, fpSize, useBuffer);
+    runDebruijn(filePath, kmerSize - 1, SHIFT, fpSize, useBuffer);
     return 0;
 }
