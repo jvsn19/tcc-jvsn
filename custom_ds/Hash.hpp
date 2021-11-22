@@ -16,7 +16,7 @@ struct Node {
 template <typename T, typename V>
 class Hash {
     private:
-        Byte *fpTable;
+        Byte *hashTable;
         std::map<T, Node*> buffer;
         ull size;
         int fpSize;

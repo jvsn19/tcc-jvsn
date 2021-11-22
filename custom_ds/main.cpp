@@ -101,17 +101,11 @@ void checkDebruijn(set<string> kmerSet, ull kmerSize, Hash<ull, char> *hashTable
     double sensibility = (double) cntTP /(double) kmerSet.size();
     double specificity = (cntWrong ? ((double) cntTN /(double) cntWrong) : 1);
     cout << cntTP << " " <<  cntTN << " " << cntFP  << " " << cntFN << " " << sensibility << " " << specificity << " " << kmerSet.size() << endl;
-    // cout << "True Positives: " << cntTP << endl;
-    // cout << "True Negatives: " << cntTN << endl;
-    // cout << "False Positives: " << cntFP << endl;
-    // cout << "False Negatives: " << cntFN << endl;
-    // cout << "Sensibility: " << (cntCorrect ? ((double) cntTP /(double) cntCorrect) : 1) << endl;
-    // cout << "Specificity: " << (cntWrong ? ((double) cntTN /(double) cntWrong) : 1) << endl;
 }
 
 
-void runDebruijn(string filePath, ull kmerSize, int nBitSize, int fpSize = FPSIZE, string useBuffer = "0") {
-    Hash<ull, char> *hashTable = new Hash<ull, char>(nBitSize, kmerSize, fpSize, useBuffer == "1");
+void runDebruijn(string filePath, ull kmerSize, int nBitSize, int fpSize, bool useBuffer, bool runTest) {
+    Hash<ull, char> *hashTable = new Hash<ull, char>(nBitSize, kmerSize, fpSize, useBuffer);
     set<string> kmerSet;
     std::ifstream genomaSeq(filePath);
     char nextChar;
@@ -127,13 +121,17 @@ void runDebruijn(string filePath, ull kmerSize, int nBitSize, int fpSize = FPSIZ
             continue;
         }
         kmer += nextChar;
-        kmerSet.insert(kmer);
+        if (runTest) {
+            kmerSet.insert(kmer);
+        }
         hashTable->set(fibHashing(hash), 1 << bases[nextChar], hash);
         kmer.erase(0, 1);
         hash = nextKMerHash(nextChar, hash);
     }
     genomaSeq.close();
-    checkDebruijn(kmerSet, kmerSize + 1, hashTable);
+    if(runTest) {
+        checkDebruijn(kmerSet, kmerSize + 1, hashTable);
+    }
     // cout << transverseDebruijn("../datasets/test.me", kmerSize, hashTable) << endl;
     delete hashTable;
 }
@@ -143,7 +141,8 @@ int main(int argc, char* argv[]) {
     ull hashMapSize = HASHMAP_SIZE;
     int fpSize = FPSIZE;
     string filePath;
-    string useBuffer;
+    int useBuffer;
+    int runTest;
     if(argc == 1) {
         cout << "Pass at least the file path" << endl;
         return 1;
@@ -154,8 +153,10 @@ int main(int argc, char* argv[]) {
     bases['T'] = 3;
     for(int i = 0; i < argc; ++i) {
         switch(argc) {
+            case 7:
+                runTest = stoi(argv[6]);
             case 6:
-                useBuffer = argv[5];
+                useBuffer = stoi(argv[5]);
             case 5:
                 fpSize = stoi(argv[4]);
             case 4:
@@ -169,6 +170,6 @@ int main(int argc, char* argv[]) {
                 filePath = argv[1];
         }
     }
-    runDebruijn(filePath, kmerSize - 1, SHIFT, fpSize, useBuffer);
+    runDebruijn(filePath, kmerSize - 1, SHIFT, fpSize, useBuffer == 1, runTest == 1);
     return 0;
 }
