@@ -1,10 +1,12 @@
 #include "Fingerprint.cpp"
 
+typedef uint8_t koi;
+
 class LinkedList {
 public:
     LinkedList *next;
-    Fingerprint *fp;
+    int fpInt;
     char edges;
 
-    LinkedList(Fingerprint *fp, char edges);
+    LinkedList(int fpInt, char edges);
 };
