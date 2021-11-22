@@ -3,32 +3,20 @@
 
 typedef unsigned long long ull;
 
-typedef uint8_t koi;
-
-typedef struct custom{
-    bool x;
-    bool y;
-    bool z;
-    custom(bool x = false, bool y = false, bool z = false): x(x), y(y), z(z) {}
-    int get() {
-        return x << 2 | y << 1 | z;
-    }
-} uint3_t;
+typedef uint8_t Byte;
 
 struct Node {
-    koi fpInt;
+    Byte fpInt;
     char edges;
     Node *next;
 
-    Node(koi fpInt = 0, char edges = 0, Node *next = nullptr): fpInt(fpInt), edges(edges), next(next){}
+    Node(Byte fpInt = 0, char edges = 0, Node *next = nullptr): fpInt(fpInt), edges(edges), next(next){}
 };
 
 template <typename T, typename V>
 class Hash {
     private:
-        T *hashTable;
-        koi *fpTable;
-        bool *fpExists;
+        Byte *fpTable;
         std::map<T, Node*> buffer;
         ull size;
         int fpSize;
