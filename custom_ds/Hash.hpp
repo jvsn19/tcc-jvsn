@@ -28,7 +28,7 @@ class Hash {
         Hash(int nBitSize, int kmerSize, int fpSize, bool useBuffer);
         ~Hash();
         V get(T key);
-        void set(T key, char pos, ull hash);
-        bool check(T key, int base, ull hash);
+        void set(ull hash, char pos);
+        bool check(ull hash, int base);
         bool findPath(std::string path);
 };

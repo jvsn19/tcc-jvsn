@@ -4,7 +4,6 @@
 #include <vector>
 #include <utility>
 #include <fstream>
-#include <cstdlib>
 
 #include "Hash.cpp"
 #include "globals.cpp"
@@ -18,15 +17,9 @@ ull FILE_SIZE = 5;
 ull HASHMAP_SIZE = 504871;
 ull KMER_SIZE = 11;
 ull MASK = ((ull) 1 << (2 * (KMER_SIZE - 1))) - 1;
-int SHIFT = 32;
 int FPSIZE = 3;
 
 int bases[256];
-
-ull fibHashing(ull key) {
-    key += 1;
-    return (((11400714819323198485 * key)) >> (64 - SHIFT)) & ((1 << SHIFT) - 1);
-}
 
 ull passMask(ull hash, ull mask = MASK) {
     return hash & MASK;
@@ -64,7 +57,7 @@ bool transverseDebruijn(string filePath, ull kmerSize, Hash<ull, char> *hashTabl
             continue;
         }
         kmer += nextChar;
-        if(!hashTable->check(fibHashing(hash), bases[nextChar], hash)) {
+        if(!hashTable->check(hash, bases[nextChar])) {
             return false;
         }
         kmer.erase(0, 1);
@@ -83,7 +76,7 @@ void checkDebruijn(set<string> kmerSet, ull kmerSize, Hash<ull, char> *hashTable
             stack.pop_back();
             if(curKMer.size() == kmerSize) {
                 ull kMerInt = startRollingHash(curKMer.substr(0, curKMer.size() - 1));
-                bool contains = hashTable->check(fibHashing(kMerInt), bases[curKMer.back()], kMerInt);
+                bool contains = hashTable->check(kMerInt, bases[curKMer.back()]);
                 if(kmerSet.find(curKMer) != kmerSet.end()) {
                     contains ? ++cntTP : ++cntFN;
                 }
@@ -99,7 +92,7 @@ void checkDebruijn(set<string> kmerSet, ull kmerSize, Hash<ull, char> *hashTable
             }
     }
     double sensibility = (double) cntTP /(double) kmerSet.size();
-    double specificity = (cntWrong ? ((double) cntTN /(double) cntWrong) : 1);
+    double specificity = (cntWrong ? 1 - ((double) cntTN /(double) cntWrong) : 1);
     cout << cntTP << " " <<  cntTN << " " << cntFP  << " " << cntFN << " " << sensibility << " " << specificity << " " << kmerSet.size() << endl;
 }
 
@@ -124,7 +117,7 @@ void runDebruijn(string filePath, ull kmerSize, int nBitSize, int fpSize, bool u
         if (runTest) {
             kmerSet.insert(kmer);
         }
-        hashTable->set(fibHashing(hash), 1 << bases[nextChar], hash);
+        hashTable->set(hash, 1 << bases[nextChar]);
         kmer.erase(0, 1);
         hash = nextKMerHash(nextChar, hash);
     }
@@ -140,6 +133,7 @@ int main(int argc, char* argv[]) {
     ull kmerSize = KMER_SIZE;
     ull hashMapSize = HASHMAP_SIZE;
     int fpSize = FPSIZE;
+    ull hashBitSize;
     string filePath;
     int useBuffer;
     int runTest;
@@ -160,9 +154,9 @@ int main(int argc, char* argv[]) {
             case 5:
                 fpSize = stoi(argv[4]);
             case 4:
-                SHIFT = stoull(argv[3]);
+                hashBitSize = stoull(argv[3]);
                 // SHIFT - 1 because, for every key, we divided by 2 and find the most apropriated 4 bits
-                hashMapSize = (ull) (1 << (SHIFT - 1));
+                hashMapSize = (ull) (1 << (hashBitSize - 1));
             case 3:
                 kmerSize = stoull(argv[2]);
                 MASK = ((ull) 1 << (2 * (kmerSize - 1))) - 1;
@@ -170,6 +164,6 @@ int main(int argc, char* argv[]) {
                 filePath = argv[1];
         }
     }
-    runDebruijn(filePath, kmerSize - 1, SHIFT, fpSize, useBuffer == 1, runTest == 1);
+    runDebruijn(filePath, kmerSize - 1, hashBitSize, fpSize, useBuffer == 1, runTest == 1);
     return 0;
 }

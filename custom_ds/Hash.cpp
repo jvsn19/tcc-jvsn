@@ -15,9 +15,9 @@ nBitSize(nBitSize),
 kmerSize(kmerSize),
 fpSize(fpSize),
 useBuffer(useBuffer) {
-    size = (1 << (nBitSize - 1));
-    hashTable = new Byte[size * 2];
-    for (int idx = 0; idx < size * 2; ++idx) {
+    size = (1 << (nBitSize));
+    hashTable = new Byte[size];
+    for (int idx = 0; idx < size; ++idx) {
         hashTable[idx] = 0;
     }
 }
@@ -26,7 +26,8 @@ template <typename T, typename V> Hash<T, V>::~Hash() {
     delete[] hashTable;
 }
 
-template <typename T, typename V> void Hash<T, V>::set(T key, char mask, ull hash) {
+template <typename T, typename V> void Hash<T, V>::set(ull hash, char mask) {
+    T key = fibHashing(hash, nBitSize);
     Byte fpInt = (Byte) fibHashing(hash & ((1 << fpSize) - 1), 3);
     if((((hashTable[key] >> 7) & 1) == 0) || (((hashTable[key] >> 4) & ((1 << 3) - 1)) == fpInt)) {
         hashTable[key] |= (1 << 7); // Sets the MSB to 1 to represent an existing value
@@ -54,7 +55,8 @@ template <typename T, typename V> void Hash<T, V>::set(T key, char mask, ull has
     }
 }
 
-template <typename T, typename V> bool Hash<T, V>::check(T key, int base, ull hash) {
+template <typename T, typename V> bool Hash<T, V>::check(ull hash, int base) {
+    T key = fibHashing(hash, nBitSize);
     Byte fpInt = (Byte) fibHashing(hash & ((1 << fpSize) - 1), 3);
     if((((hashTable[key] >> 7) & 1) != 0) && (((hashTable[key] >> 4) & ((1 << 3) - 1)) == fpInt)) {
         T hashIndex = (T) key >> 1;
